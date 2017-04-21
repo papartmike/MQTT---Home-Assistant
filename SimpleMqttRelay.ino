@@ -1,7 +1,7 @@
 /*  MQTT switch (relay control)
    
     - WiFi INITIALISAZION: as described embedded
-    - MQTT stndard pubsubclient LIBRARY.
+    - MQTT standard pubsubclient LIBRARY.
         - reconnect() connect to the broker and SUBSRIBE to topics
         - callback() recieve the messages this client is subscribed to
     - turnON/turnOFF function -  payload 0 and 1
@@ -37,12 +37,11 @@
 
 /****************************** INPUTS/OUTPUTS  ***************************************/
 #define Relay 0  //define pin
-
 WiFiClient espClient;              //initialise a wifi client
 PubSubClient client(espClient);   //creates a partially initialised client instance
 
-char msg[50];
-int RelayState = 0;
+char msg[50];  //to store mqtt messages
+int RelayState = 0;  //to store relay state
 
 /****************************** SETUP WIFI  ***************************************/
 void setup_wifi() {
@@ -73,15 +72,12 @@ void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
+    String clientId = "ESP8266Client-";           // Create a random client ID
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
       client.publish(RelayStatusPub, "0");
-      // ... and resubscribe
       client.subscribe(RelayCommandSub);
     } else {
       Serial.print("failed, rc=");
@@ -102,32 +98,29 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   }
   Serial.println();
-
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
-    digitalWrite(Relay, HIGH);   // Turn the LED on
+    digitalWrite(Relay, HIGH);   // Turn the RELAY ON
     RelayState = 1;
     client.publish(RelayStatusPub,"1");
   }   
   if ((char)payload[0] == '0') {
-    digitalWrite(Relay, LOW);   // Turn the LED on
+    digitalWrite(Relay, LOW);   // Turn the LED OFF
     RelayState = 0;
     client.publish(RelayStatusPub,"0");
   }
 
 }
 void setup() {
-  // put your setup code here, to run once:
   pinMode(Relay, OUTPUT);
   Serial.begin(9600);
   digitalWrite(Relay, LOW);
-  setup_wifi();
+  setup_wifi(); 
   client.setServer(mqtt_server, 1883);  //client is now ready for use
   client.setCallback(callback);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   if (!client.connected()) {
     reconnect();
   }
