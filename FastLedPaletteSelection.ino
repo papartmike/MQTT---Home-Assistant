@@ -8,6 +8,7 @@
       within HA.only if there is an external control for that)
     - Palette selection (STATIC) through HA
     - RGB palette allows to control colors
+    - Display the value of sensor_battery1 on the led strip
 
 
     HOME ASSISTANT LIGHT (RGB)
